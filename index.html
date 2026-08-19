@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dual Coding Challenge — Module 4</title>
+<style>
+  :root{
+    --navy:#1E2E45;
+    --blue-dark:#334E72;
+    --blue:#5577A0;
+    --blue-light:#7A9CBF;
+    --blue-pale:#B8CEDE;
+    --slate:#8A9BAD;
+    --silver:#C8CDD4;
+    --silver-light:#E8ECF0;
+    --cream:#F4F6F9;
+    --warm-white:#FAFBFD;
+    --text:#2A3340;
+    --text-light:#5A6A7A;
+    --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--cream);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    text-align:center;
+  }
+  .brand-header{
+    width:100%;
+    max-width:820px;
+    text-align:center;
+    color:var(--navy);
+    font-weight:800;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    font-size:clamp(.8rem,2.8vw,1rem);
+    padding-bottom:10px;
+    margin-bottom:6px;
+    border-bottom:2px solid var(--blue-pale);
+  }
+  #app{
+    width:100%;
+    max-width:820px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+  .screen{
+    width:100%;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+    animation:fadeIn .3s ease;
+  }
+  .screen.active{display:flex;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  h1{
+    color:var(--navy);
+    font-size:clamp(1.3rem,4vw,1.9rem);
+    margin:4px 0 0 0;
+    text-align:center;
+  }
+  h2.subhead{
+    color:var(--blue-dark);
+    font-size:clamp(1rem,3vw,1.2rem);
+    margin:0;
+    text-align:center;
+    font-weight:600;
+  }
+  p.lead{
+    color:var(--text-light);
+    text-align:center;
+    max-width:560px;
+    line-height:1.5;
+    margin:0;
+    font-size:clamp(.9rem,2.5vw,1rem);
+  }
+  .badge{
+    display:inline-block;
+    background:var(--blue-pale);
+    color:var(--navy);
+    font-weight:700;
+    font-size:.8rem;
+    letter-spacing:.03em;
+    padding:5px 14px;
+    border-radius:999px;
+    text-transform:uppercase;
+  }
+
+  .btn{
+    background:var(--blue);
+    color:var(--white);
+    border:none;
+    padding:14px 30px;
+    border-radius:10px;
+    font-size:1rem;
+    font-weight:700;
+    cursor:pointer;
+    transition:background .15s ease, transform .1s ease;
+    touch-action:manipulation;
+  }
+  .btn:hover{background:var(--blue-dark);}
+  .btn:active{transform:scale(.97);}
+  .btn.secondary{
+    background:var(--silver-light);
+    color:var(--navy);
+  }
+  .btn.secondary:hover{background:var(--silver);}
+
+  /* --- HUD (timer + progress) --- */
+  .hud{
+    width:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:18px;
+    text-align:center;
+    background:var(--navy);
+    color:var(--white);
+    padding:10px 16px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:.95rem;
+  }
+  .hud .timer{
+    font-variant-numeric:tabular-nums;
+    background:var(--blue-dark);
+    padding:4px 12px;
+    border-radius:6px;
+    min-width:56px;
+    text-align:center;
+  }
+  .hud .timer.low{background:#8A3A3A;}
+
+  /* --- Concentration grid --- */
+  .grid{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+  }
+  @media(min-width:600px){
+    .grid{grid-template-columns:repeat(6,1fr);}
+  }
+  .card{
+    aspect-ratio:3/4;
+    background:var(--blue-dark);
+    border-radius:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    box-shadow:0 2px 4px rgba(30,46,69,.25);
+    transition:transform .12s ease, background .15s ease;
+    position:relative;
+  }
+  .card:active{transform:scale(.95);}
+  .card .face{
+    display:none;
+    text-align:center;
+    padding:4px;
+    line-height:1.15;
+    color:var(--navy);
+    font-weight:700;
+    font-size:clamp(.62rem,2.6vw,.85rem);
+    word-break:break-word;
+  }
+  .card .emoji-face{
+    font-size:clamp(1.4rem,6vw,2.1rem);
+  }
+  .card .combo-face{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+  }
+  .combo-icon{
+    font-size:clamp(1.2rem,5vw,1.7rem);
+    line-height:1;
+  }
+  .combo-word{
+    font-size:clamp(.6rem,2.3vw,.78rem);
+    font-weight:700;
+    color:var(--navy);
+    text-align:center;
+    line-height:1.1;
+  }
+  .card .back-mark{
+    color:var(--blue-pale);
+    font-size:clamp(1.2rem,5vw,1.6rem);
+    font-weight:800;
+  }
+  .card.flipped{background:var(--silver-light);}
+  .card.flipped .back-mark{display:none;}
+  .card.flipped .face{display:block;}
+  .card.matched{background:var(--blue-pale);cursor:default;}
+  .card.matched .back-mark{display:none;}
+  .card.matched .face{display:block;}
+  .card.flipped .combo-face,
+  .card.matched .combo-face{display:flex;}
+
+  /* --- Bullet list display (Game 3) --- */
+  .bullet-box{
+    width:100%;
+    background:var(--white);
+    border:2px solid var(--blue-pale);
+    border-radius:12px;
+    padding:20px 24px;
+  }
+  .bullet-box ul{
+    margin:0;
+    padding-left:0;
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+  }
+  .bullet-box li{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:12px;
+    font-size:clamp(1rem,3vw,1.15rem);
+    font-weight:600;
+    color:var(--text);
+    text-align:center;
+  }
+  .bullet-box li .icon{
+    font-size:1.4rem;
+    min-width:28px;
+    text-align:center;
+  }
+  .progress-track{
+    width:100%;
+    height:8px;
+    background:var(--silver-light);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--blue);
+    width:100%;
+    transition:width 1s linear;
+  }
+
+  textarea{
+    width:100%;
+    min-height:140px;
+    border:2px solid var(--silver);
+    border-radius:10px;
+    padding:12px;
+    font-size:1rem;
+    font-family:inherit;
+    color:var(--text);
+    resize:vertical;
+  }
+  textarea:focus{outline:none;border-color:var(--blue);}
+
+  /* --- Modal --- */
+  #modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(30,46,69,.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  #modal-overlay.active{display:flex;}
+  #modal-box{
+    background:var(--white);
+    border-radius:14px;
+    padding:28px 26px;
+    max-width:420px;
+    width:100%;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(30,46,69,.35);
+    border-top:6px solid var(--blue);
+  }
+  #modal-box h2{
+    color:var(--navy);
+    margin:0 0 10px 0;
+    font-size:1.3rem;
+  }
+  #modal-box .score-line{
+    font-size:2rem;
+    font-weight:800;
+    color:var(--blue-dark);
+    margin:6px 0 12px 0;
+  }
+  #modal-box p{
+    color:var(--text-light);
+    line-height:1.5;
+    margin:0 0 18px 0;
+  }
+
+  .footer-note{
+    font-size:.78rem;
+    color:var(--text-light);
+    text-align:center;
+    margin-top:4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="brand-header">Designing for Impact</div>
+
+<div id="app">
+
+  <!-- WELCOME -->
+  <div class="screen active" id="screen-welcome">
+    <span class="badge">Module 4 · Dual Coding</span>
+    <h1>The Dual Coding Challenge</h1>
+    <p class="lead">Three quick games. Same idea, tested three ways: does pairing a word with an image help you remember it better than the word alone? Play them in order — no going back.</p>
+    <button class="btn" onclick="goTo('game1-intro')">Start →</button>
+  </div>
+
+  <!-- GAME 1 INTRO -->
+  <div class="screen" id="screen-game1-intro">
+    <span class="badge">Game 1 of 3</span>
+    <h1>Word Match</h1>
+    <p class="lead">Flip two cards at a time to find matching pairs. Every card is a word only — no images. You have <strong>90 seconds</strong>. Find as many pairs as you can before time runs out.</p>
+    <button class="btn" onclick="startGame(1)">Flip First Card →</button>
+  </div>
+
+  <!-- GAME 1 PLAY -->
+  <div class="screen" id="screen-game1-play">
+    <div class="hud">
+      <span>Game 1: Word Match</span>
+      <span>Matches: <span id="g1-matches">0</span>/12</span>
+      <span class="timer" id="g1-timer">1:30</span>
+    </div>
+    <div class="grid" id="g1-grid"></div>
+  </div>
+
+  <!-- GAME 2 INTRO -->
+  <div class="screen" id="screen-game2-intro">
+    <span class="badge">Game 2 of 3</span>
+    <h1>Word + Image Match</h1>
+    <p class="lead">Same game — but this time every card shows the word <strong>and</strong> an icon together. Find the two matching dual-coded cards. Again, <strong>90 seconds</strong> on the clock.</p>
+    <button class="btn" onclick="startGame(2)">Flip First Card →</button>
+  </div>
+
+  <!-- GAME 2 PLAY -->
+  <div class="screen" id="screen-game2-play">
+    <div class="hud">
+      <span>Game 2: Word + Image</span>
+      <span>Matches: <span id="g2-matches">0</span>/12</span>
+      <span class="timer" id="g2-timer">1:30</span>
+    </div>
+    <div class="grid" id="g2-grid"></div>
+  </div>
+
+  <!-- GAME 3 INTRO -->
+  <div class="screen" id="screen-game3-intro">
+    <span class="badge">Game 3 of 3</span>
+    <h1>Recall Round</h1>
+    <p class="lead">You'll see a short list for 20 seconds. Then it disappears, and you'll type everything you remember. You'll do this twice — once with text only, once with text plus an icon. This part isn't scored — it's for you to feel the difference.</p>
+    <button class="btn" onclick="startGame3RoundA()">Show Round A →</button>
+  </div>
+
+  <!-- GAME 3 ROUND A DISPLAY -->
+  <div class="screen" id="screen-g3a-display">
+    <div class="hud">
+      <span>Round A: Text Only</span>
+      <span class="timer" id="g3a-timer">0:20</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="g3a-progress"></div></div>
+    <div class="bullet-box">
+      <ul id="g3a-list"></ul>
+    </div>
+  </div>
+
+  <!-- GAME 3 ROUND A RECALL -->
+  <div class="screen" id="screen-g3a-recall">
+    <h2 class="subhead">Round A — What do you remember?</h2>
+    <p class="lead">Type everything you can recall from the list, in any order.</p>
+    <textarea id="g3a-input" placeholder="Type what you remember here..."></textarea>
+    <button class="btn" onclick="finishRoundA()">Continue to Round B →</button>
+  </div>
+
+  <!-- GAME 3 ROUND B DISPLAY -->
+  <div class="screen" id="screen-g3b-display">
+    <div class="hud">
+      <span>Round B: Text + Icon</span>
+      <span class="timer" id="g3b-timer">0:20</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="g3b-progress"></div></div>
+    <div class="bullet-box">
+      <ul id="g3b-list"></ul>
+    </div>
+  </div>
+
+  <!-- GAME 3 ROUND B RECALL -->
+  <div class="screen" id="screen-g3b-recall">
+    <h2 class="subhead">Round B — What do you remember?</h2>
+    <p class="lead">Same task, list with icons this time. Type everything you can recall.</p>
+    <textarea id="g3b-input" placeholder="Type what you remember here..."></textarea>
+    <button class="btn" onclick="finishRoundB()">See Comparison →</button>
+  </div>
+
+  <!-- FINAL / COMPARISON -->
+  <div class="screen" id="screen-final">
+    <span class="badge">Wrap-Up</span>
+    <h1>Compare Your Lists</h1>
+    <p class="lead">Here's what you typed for each round. Which one came easier — and why?</p>
+    <div class="bullet-box" style="text-align:center;">
+      <h2 class="subhead" style="margin-bottom:6px;">Round A (text only)</h2>
+      <p id="final-a-text" style="color:var(--text);white-space:pre-wrap;margin:0 0 16px 0;text-align:center;"></p>
+      <h2 class="subhead" style="margin-bottom:6px;">Round B (text + icon)</h2>
+      <p id="final-b-text" style="color:var(--text);white-space:pre-wrap;margin:0;text-align:center;"></p>
+    </div>
+    <button class="btn secondary" onclick="location.reload()">Restart Activity</button>
+    <p class="footer-note">Designing for Impact · Module 4 — Cognitive Load, Design & Iconography</p>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div id="modal-box">
+    <h2 id="modal-title">Time's Up!</h2>
+    <div class="score-line" id="modal-score"></div>
+    <p id="modal-body"></p>
+    <button class="btn" id="modal-next-btn">Next →</button>
+  </div>
+</div>
+
+<script>
+/* ---------- Navigation ---------- */
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
+function showModal(title, scoreText, bodyText, nextLabel, onNext){
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-score').textContent = scoreText;
+  document.getElementById('modal-body').textContent = bodyText;
+  const btn = document.getElementById('modal-next-btn');
+  btn.textContent = nextLabel;
+  btn.onclick = function(){
+    document.getElementById('modal-overlay').classList.remove('active');
+    onNext();
+  };
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+/* ---------- Word banks ---------- */
+// Game 1: word-only pairs (identical word matched to itself)
+const GAME1_WORDS = ["Tent","Lantern","Backpack","Canteen","Rope","Map","Flashlight","Whistle","Blanket","Matches","Knife","Hammock"];
+
+// Game 2: word + emoji pairs (cross-modal match)
+const GAME2_PAIRS = [
+  {word:"Umbrella", emoji:"☂️"},
+  {word:"Camera", emoji:"📷"},
+  {word:"Guitar", emoji:"🎸"},
+  {word:"Bicycle", emoji:"🚲"},
+  {word:"Balloon", emoji:"🎈"},
+  {word:"Anchor", emoji:"⚓"},
+  {word:"Rocket", emoji:"🚀"},
+  {word:"Cactus", emoji:"🌵"},
+  {word:"Compass", emoji:"🧭"},
+  {word:"Kite", emoji:"🪁"},
+  {word:"Drum", emoji:"🥁"},
+  {word:"Snail", emoji:"🐌"}
+];
+
+// Game 3 Round A: text only
+const G3_ROUND_A = ["Rope","Tarp","Stove","Radio","Boots","Journal","Thermos","Multitool"];
+
+// Game 3 Round B: text + icon (different equivalent items)
+const G3_ROUND_B = [
+  {text:"Poncho", icon:"☔"},
+  {text:"Torch", icon:"🔦"},
+  {text:"Kettle", icon:"🫖"},
+  {text:"Binoculars", icon:"🔭"},
+  {text:"Gloves", icon:"🧤"},
+  {text:"Flask", icon:"🥃"},
+  {text:"Lantern", icon:"🏮"},
+  {text:"Hatchet", icon:"🪓"}
+];
+
+/* ---------- Utility ---------- */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function formatTime(sec){
+  const m = Math.floor(sec/60);
+  const s = sec%60;
+  return m+":"+(s<10?"0":"")+s;
+}
+
+/* ---------- Concentration game engine (used for Game 1 & 2) ---------- */
+const gameState = {1:null, 2:null};
+
+function buildDeck(gameNum){
+  let deck = [];
+  if(gameNum === 1){
+    GAME1_WORDS.forEach((w,i)=>{
+      deck.push({pairId:i, content:w, type:'text'});
+      deck.push({pairId:i, content:w, type:'text'});
+    });
+  } else {
+    GAME2_PAIRS.forEach((p,i)=>{
+      deck.push({pairId:i, content:{word:p.word, emoji:p.emoji}, type:'combo'});
+      deck.push({pairId:i, content:{word:p.word, emoji:p.emoji}, type:'combo'});
+    });
+  }
+  return shuffle(deck).map((c,idx)=>Object.assign({uid:idx}, c));
+}
+
+function startGame(gameNum){
+  goTo('game'+gameNum+'-play');
+  const deck = buildDeck(gameNum);
+  const total = gameNum === 1 ? GAME1_WORDS.length : GAME2_PAIRS.length;
+
+  const state = {
+    deck: deck,
+    flipped: [],
+    matched: 0,
+    total: total,
+    locked: false,
+    timeLeft: 90,
+    timerId: null,
+    ended: false
+  };
+  gameState[gameNum] = state;
+
+  const grid = document.getElementById('g'+gameNum+'-grid');
+  grid.innerHTML = '';
+  deck.forEach(card=>{
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.dataset.uid = card.uid;
+    const back = document.createElement('div');
+    back.className = 'back-mark';
+    back.textContent = '?';
+    const face = document.createElement('div');
+    if(card.type === 'combo'){
+      face.className = 'face combo-face';
+      const iconSpan = document.createElement('div');
+      iconSpan.className = 'combo-icon';
+      iconSpan.textContent = card.content.emoji;
+      const wordSpan = document.createElement('div');
+      wordSpan.className = 'combo-word';
+      wordSpan.textContent = card.content.word;
+      face.appendChild(iconSpan);
+      face.appendChild(wordSpan);
+    } else if(card.type === 'emoji'){
+      face.className = 'face emoji-face';
+      face.textContent = card.content;
+    } else {
+      face.className = 'face';
+      face.textContent = card.content;
+    }
+    el.appendChild(back);
+    el.appendChild(face);
+    el.addEventListener('click', ()=>flipCard(gameNum, card.uid, el));
+    grid.appendChild(el);
+  });
+
+  document.getElementById('g'+gameNum+'-matches').textContent = '0';
+  const timerEl = document.getElementById('g'+gameNum+'-timer');
+  timerEl.textContent = formatTime(state.timeLeft);
+  timerEl.classList.remove('low');
+
+  state.timerId = setInterval(()=>{
+    state.timeLeft--;
+    timerEl.textContent = formatTime(state.timeLeft);
+    if(state.timeLeft <= 15) timerEl.classList.add('low');
+    if(state.timeLeft <= 0){
+      endConcentrationGame(gameNum, false);
+    }
+  }, 1000);
+}
+
+function flipCard(gameNum, uid, el){
+  const state = gameState[gameNum];
+  if(state.ended || state.locked) return;
+  if(el.classList.contains('flipped') || el.classList.contains('matched')) return;
+  if(state.flipped.length >= 2) return;
+
+  el.classList.add('flipped');
+  state.flipped.push({uid, el});
+
+  if(state.flipped.length === 2){
+    state.locked = true;
+    const [a,b] = state.flipped;
+    const cardA = state.deck.find(c=>c.uid==a.uid);
+    const cardB = state.deck.find(c=>c.uid==b.uid);
+    if(cardA.pairId === cardB.pairId){
+      setTimeout(()=>{
+        a.el.classList.remove('flipped'); a.el.classList.add('matched');
+        b.el.classList.remove('flipped'); b.el.classList.add('matched');
+        state.matched++;
+        document.getElementById('g'+gameNum+'-matches').textContent = state.matched;
+        state.flipped = [];
+        state.locked = false;
+        if(state.matched >= state.total){
+          endConcentrationGame(gameNum, true);
+        }
+      }, 350);
+    } else {
+      setTimeout(()=>{
+        a.el.classList.remove('flipped');
+        b.el.classList.remove('flipped');
+        state.flipped = [];
+        state.locked = false;
+      }, 800);
+    }
+  }
+}
+
+function endConcentrationGame(gameNum, completedAll){
+  const state = gameState[gameNum];
+  if(state.ended) return;
+  state.ended = true;
+  clearInterval(state.timerId);
+
+  const title = completedAll ? "All Matched!" : "Time's Up!";
+  const scoreText = state.matched + " / " + state.total + " pairs matched";
+  let body;
+  if(gameNum === 1){
+    body = completedAll
+      ? "Nice work matching on words alone. Let's see what happens when an image gets added to the mix."
+      : "That's working memory doing exactly what it does with words alone. Now let's add an image to the mix and see what changes.";
+    showModal(title, scoreText, body, "Next Game →", ()=>goTo('game2-intro'));
+  } else {
+    body = completedAll
+      ? "You matched every pair. Compare that to your Game 1 score — did having the icon on the card with the word make it easier?"
+      : "Compare this score to Game 1 — did having the icon on the card with the word change how it went?";
+    showModal(title, scoreText, body, "Continue →", ()=>goTo('game3-intro'));
+  }
+}
+
+/* ---------- Game 3: recall rounds ---------- */
+function startGame3RoundA(){
+  goTo('g3a-display');
+  const list = document.getElementById('g3a-list');
+  list.innerHTML = '';
+  G3_ROUND_A.forEach(item=>{
+    const li = document.createElement('li');
+    li.textContent = item;
+    list.appendChild(li);
+  });
+  runExposureTimer('g3a-timer','g3a-progress', 20, ()=>{
+    goTo('g3a-recall');
+    document.getElementById('g3a-input').value = '';
+  });
+}
+
+function finishRoundA(){
+  window.g3aResponse = document.getElementById('g3a-input').value.trim();
+  goTo('g3b-display');
+  const list = document.getElementById('g3b-list');
+  list.innerHTML = '';
+  G3_ROUND_B.forEach(item=>{
+    const li = document.createElement('li');
+    const icon = document.createElement('span');
+    icon.className = 'icon';
+    icon.textContent = item.icon;
+    const text = document.createElement('span');
+    text.textContent = item.text;
+    li.appendChild(icon);
+    li.appendChild(text);
+    list.appendChild(li);
+  });
+  runExposureTimer('g3b-timer','g3b-progress', 20, ()=>{
+    goTo('g3b-recall');
+    document.getElementById('g3b-input').value = '';
+  });
+}
+
+function finishRoundB(){
+  window.g3bResponse = document.getElementById('g3b-input').value.trim();
+  document.getElementById('final-a-text').textContent = window.g3aResponse || "(nothing typed)";
+  document.getElementById('final-b-text').textContent = window.g3bResponse || "(nothing typed)";
+  goTo('final');
+}
+
+function runExposureTimer(timerId, progressId, seconds, onDone){
+  const timerEl = document.getElementById(timerId);
+  const progressEl = document.getElementById(progressId);
+  let timeLeft = seconds;
+  timerEl.textContent = formatTime(timeLeft);
+  timerEl.classList.remove('low');
+  progressEl.style.width = '100%';
+  const interval = setInterval(()=>{
+    timeLeft--;
+    timerEl.textContent = formatTime(timeLeft);
+    progressEl.style.width = (timeLeft/seconds*100)+'%';
+    if(timeLeft <= 5) timerEl.classList.add('low');
+    if(timeLeft <= 0){
+      clearInterval(interval);
+      onDone();
+    }
+  }, 1000);
+}
+</script>
+
+</body>
+</html>
